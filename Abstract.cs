@@ -15,5 +15,5 @@ public interface ICollectionRepository
 {
     Task AddAsync(CardRecord card);
 
-    IEnumerable<CardRecord> GetScryfallCards(string query, int pageSize = 175);
+    List<CardRecord> GetScryfallCards(string query, int pageSize = 175);
 }

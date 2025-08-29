@@ -50,19 +50,19 @@ public class CardRepository : ICollectionRepository
         cmd.Parameters.AddWithValue("$collectorNumber", card.CollectorNumber);
         cmd.ExecuteNonQuery();
 
+        connection.Close();
+
         return Task.CompletedTask;
     }
 
-    public IEnumerable<CardRecord> GetScryfallCards(string query, int pageSize = 175)
+    public List<CardRecord> GetScryfallCards(string query, int pageSize = 175)
     {
         using var connection = new SqliteConnection(_connectionString);
         connection.Open();
 
-        string sql = $"SELECT * FROM cards {query} LIMIT {pageSize}";
+        string sql = $"SELECT * FROM cards {query}";
 
-        Console.Write(sql);
-
-        using var command = new SqliteCommand(query, connection);
+        using var command = new SqliteCommand(sql, connection);
         using var reader = command.ExecuteReader();
 
         List<CardRecord> cards = new List<CardRecord>();
@@ -78,6 +78,8 @@ public class CardRepository : ICollectionRepository
 
             cards.Add(card);
         }
+
+        Console.WriteLine($"Fetched {cards.Count} cards from database.");
 
         return cards;
     }
