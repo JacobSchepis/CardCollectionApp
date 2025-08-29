@@ -11,6 +11,7 @@ class Program
         Menu menu = new Menu("Main Menu", new List<IMenuAction>
         {
             new AddCardAction(new ScryfallClient(), repo),
+            new ViewCardsAction(repo),
             new ExitAction()
         });
         await menu.DisplayMenu();

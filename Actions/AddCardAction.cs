@@ -44,7 +44,12 @@
             if (card != null)
             {
                 Console.WriteLine($"Fetched card: {card}");
-                //cardRepo.AddCard(card.Name, setCode, number);
+
+                await _collectionRepository.AddAsync(new CardRecord {
+                    Name = card.Name,
+                    SetCode = setCode,
+                    CollectorNumber = number
+                });
             }
             else
             {

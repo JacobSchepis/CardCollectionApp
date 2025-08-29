@@ -13,13 +13,7 @@ public interface IScryfallClient {Task<ScryfallCard?> FetchBySetAndNumberAsync(
 
 public interface ICollectionRepository
 {
-    Task AddAsync(ScryfallCard card);
+    Task AddAsync(CardRecord card);
 
-    Task<(IReadOnlyList<CardRecord> rows, int total)> QueryAsync(QueryOptions opts, int pageIndex);
-}
-
-public interface IMenuAction
-{
-    string Label { get; protected set; }
-    Task<bool> ExecuteAsync();
+    IEnumerable<CardRecord> GetScryfallCards(string query, int pageSize = 175);
 }

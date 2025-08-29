@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 
 public class CardRecord
 {
-    public int Id { get; set; }
     public string Name { get; set; } = "";
     public string SetCode { get; set; } = "";
     public int CollectorNumber { get; set; }
@@ -35,9 +34,10 @@ public class CardRepository : ICollectionRepository
                 collector_number INTEGER NOT NULL
             );";
         cmd.ExecuteNonQuery();
+        connection.Close();
     }
 
-    public Task AddAsync(ScryfallCard card)
+    public Task AddAsync(CardRecord card)
     {
         using var connection = new SqliteConnection(_connectionString);
         connection.Open();
@@ -46,54 +46,57 @@ public class CardRepository : ICollectionRepository
             INSERT INTO cards (name, set_code, collector_number)
             VALUES ($name, $setCode, $collectorNumber);";
         cmd.Parameters.AddWithValue("$name", card.Name);
-        cmd.Parameters.AddWithValue("$setCode", card.SetName);
+        cmd.Parameters.AddWithValue("$setCode", card.SetCode);
         cmd.Parameters.AddWithValue("$collectorNumber", card.CollectorNumber);
         cmd.ExecuteNonQuery();
 
         return Task.CompletedTask;
     }
 
-    public IEnumerable<CardRecord> GetAllCards()
+    public IEnumerable<CardRecord> GetScryfallCards(string query, int pageSize = 175)
     {
         using var connection = new SqliteConnection(_connectionString);
         connection.Open();
 
-        var cmd = connection.CreateCommand();
-        cmd.CommandText = "SELECT id, name, set_code, collector_number FROM cards";
+        string sql = $"SELECT * FROM cards {query} LIMIT {pageSize}";
 
-        using var reader = cmd.ExecuteReader();
+        Console.Write(sql);
+
+        using var command = new SqliteCommand(query, connection);
+        using var reader = command.ExecuteReader();
+
+        List<CardRecord> cards = new List<CardRecord>();
+
         while (reader.Read())
         {
-            yield return new CardRecord
+            var card = new CardRecord
             {
-                Id = reader.GetInt32(0),
-                Name = reader.GetString(1),
-                SetCode = reader.GetString(2),
-                CollectorNumber = reader.GetInt32(3)
+                Name = reader["name"].ToString(),
+                SetCode = reader["set_code"].ToString(),
+                CollectorNumber = reader.GetInt32(reader.GetOrdinal("collector_number")),
             };
-        }
-    }
 
-    public Task<(IReadOnlyList<CardRecord> rows, int total)> QueryAsync(QueryOptions opts, int pageIndex)
-    {
-        throw new NotImplementedException();
+            cards.Add(card);
+        }
+
+        return cards;
     }
 }
 
-public sealed class SqlWhereBuilder
+public class SqlWhereBuilder
 {
-    private readonly List<string> _clauses = new();
-    private readonly List<SqliteParameter> _parms = new();
-    private int _i;
+    private readonly List<string> _conditions = new();
 
-    public string AddParam(object v)
+    public void Add(string condition)
     {
-        var name = $"$p{_i++}";
-        _parms.Add(new SqliteParameter(name, v));
-        return name;
+        _conditions.Add(condition);
     }
-    public void And(string expr) { _clauses.Add(expr); }
 
-    public (string whereSql, List<SqliteParameter> parms) Build()
-        => (_clauses.Count == 0 ? "" : "WHERE " + string.Join(" AND ", _clauses), _parms);
+    public string Build()
+    {
+        if (_conditions.Count == 0)
+            return "";
+
+        return "WHERE " + string.Join(" AND ", _conditions);
+    }
 }
