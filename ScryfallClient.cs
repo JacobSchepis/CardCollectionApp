@@ -43,16 +43,22 @@ public sealed class ScryfallClient : IScryfallClient
 public sealed class ScryfallCard
 {
     [JsonPropertyName("name")] public string Name { get; set; } = "";
+    [JsonPropertyName("set_code")] public string SetCode { get; set; } = "";
     [JsonPropertyName("set_name")] public string SetName { get; set; } = "";
     [JsonPropertyName("collector_number")] public string CollectorNumber { get; set; } = "";
+    [JsonPropertyName("color_identity")] public string ColorIdentity { get; set; } = "";
+    [JsonPropertyName("rarity")] public string Rarity { get; set; } = "";
+    [JsonPropertyName("cmc")] public string Cmc { get; set; } = "";
+    [JsonPropertyName("game_change")] public bool GameChanger { get; set; } = false;
     [JsonPropertyName("prices")] public ScryfallPrices? Prices { get; set; }
+    [JsonPropertyName("lang")] public string Language { get; set; } = "en";
 
     public override string ToString()
     {
         string s = $"{SetName} #{CollectorNumber}: {Name} \n";
         s += Prices is null
             ? "  No price data\n"
-            : $"  Prices: USD {Prices.Usd ?? "N/A"}, USD Foil {Prices.UsdFoil ?? "N/A"}, EUR {Prices.Eur ?? "N/A"}, TIX {Prices.Tix ?? "N/A"}\n";
+            : $"  Prices: USD {Prices.Usd ?? "N/A"}, USD Foil {Prices.UsdFoil ?? "N/A"}\n";
         return s;
     }
 }
@@ -61,8 +67,4 @@ public sealed class ScryfallPrices
 {
     public string? Usd { get; set; }
     public string? UsdFoil { get; set; }
-    public string? UsdEtched { get; set; }
-    public string? Eur { get; set; }
-    public string? EurFoil { get; set; }
-    public string? Tix { get; set; }
 }

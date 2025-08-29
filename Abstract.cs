@@ -13,7 +13,7 @@ public interface IScryfallClient {Task<ScryfallCard?> FetchBySetAndNumberAsync(
 
 public interface ICollectionRepository
 {
-    Task AddAsync(CardRecord card);
+    Task AddAsync(ScryfallCard card);
 
     List<CardRecord> GetScryfallCards(string query, int pageSize = 175);
 }
