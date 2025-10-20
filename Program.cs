@@ -15,11 +15,6 @@ class Program
             new ExitAction()
         });
         await menu.DisplayMenu();
-
-
-
-
-
         
     }
 }

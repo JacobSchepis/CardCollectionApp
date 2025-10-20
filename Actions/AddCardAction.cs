@@ -19,45 +19,75 @@
 
         Console.WriteLine("Enter cards one by one and press enter");
 
-        List<int> ints = new List<int>();
+        List<string> codes = new List<string>();
 
         while (true)
         {
             string collectorString = Console.ReadLine()!.Trim();
 
-            if (int.TryParse(collectorString, out int collectorNumber))
-                ints.Add(collectorNumber);
-            else
+            if (collectorString.Equals("done", StringComparison.OrdinalIgnoreCase))
                 break;
+
+            codes.Add(collectorString);
         }
 
         ScryfallClient scryfall = new ScryfallClient();
 
-        foreach (var number in ints)
+        foreach (var code in codes)
         {
-            Console.WriteLine($"Fetching card for set {setCode} and collector number {number}...");
-
-            string something = number.ToString();
-
-            var card = await _scryfallClient.FetchBySetAndNumberAsync(setCode, something);
-
-            if (card != null)
+            if (!TryParseCollectorInput(code, out int number, out bool isFoil, out bool isPromo))
             {
-                Console.WriteLine($"Fetched card: {card}");
+                Console.WriteLine($"Invalid collector number input: {code}");
+                continue;
+            }
 
-                await _collectionRepository.AddAsync(new CardRecord {
-                    Name = card.Name,
-                    SetCode = setCode,
-                    CollectorNumber = number
-                });
-            }
-            else
+            var card = await _scryfallClient.FetchBySetAndNumberAsync(setCode, number.ToString());
+
+            if (card == null)
             {
-                Console.WriteLine($"No card found for set {setCode} and collector number {number}.");
+                Console.WriteLine($"No card found for set {setCode} and collector number {code}.");
+                continue;
             }
+
+            var cardRecord = new CardRecord(card, isFoil, isPromo);
+
+            Console.WriteLine("Hello");
+
+            await _collectionRepository.AddAsync(cardRecord);
         }
 
         string end = Console.ReadLine()!.Trim().ToLower();
+        return true;
+    }
+
+    private static bool TryParseCollectorInput(string input, out int number, out bool isFoil, out bool isPromo)
+    {
+        number = 0;
+        isFoil = false;
+        isPromo = false;
+
+        if (string.IsNullOrWhiteSpace(input))
+            return false;
+
+        // Normalize spaces and case
+        var s = input.Trim().ToLowerInvariant();
+
+        // Collect flags anywhere in the string
+        isFoil = s.Contains('+');
+        isPromo = s.Contains('-');
+
+        // Remove flag chars to get the raw collector number (can be alphanumeric in Scryfall, e.g., "123a")
+        s = s.Replace("+", "").Replace("-", "").Trim();
+
+        int parsedNumber;
+
+        if (int.TryParse(s, out parsedNumber))
+            number = parsedNumber;
+        else
+            return false;
+
+        // Collector numbers can include leading zeros and letters (e.g., "045", "123a")
+        number = parsedNumber;
         return true;
     }
 }

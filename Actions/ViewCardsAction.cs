@@ -7,14 +7,12 @@ public sealed class ViewCardsAction : IMenuAction
     private readonly ICollectionRepository _collectionRepository;
     private readonly List<ICardFilter> _filters = new()
     {
-        new CollectorNumberFilter()
+        new CollectorNumberFilter(),
+        new SetFilter(),
+        new CmcFilter()
     };
 
     public string Label { get; set; } = "View Cards";
-
-
-
-
 
     public ViewCardsAction(ICollectionRepository collectionRepository)
     {
@@ -67,12 +65,23 @@ public sealed class ViewCardsAction : IMenuAction
             
             var cards = _collectionRepository.GetScryfallCards(where);
 
-            Console.Write(cards.Count());
+            Console.Clear();
 
-            foreach(var card in cards)
+            Console.WriteLine(
+                    $"{"Name",-35} {"Set",-40} {"Rarity",-10} {"ManaCost",-12} {"CMC",-5} {"Price",-10} {"Foil",-10} {"Quantity", -15}");
+
+            int maxLength = 26;
+
+            foreach (var card in cards)
             {
-                Console.WriteLine($"{card.Name}, Set:{card.SetCode}, CN:{card.CollectorNumber}");
+                string shortString = card.SetName.Length > maxLength
+                        ? card.SetName.Substring(0, maxLength) + "..."
+                        : card.SetName;
+
+                Console.WriteLine(
+                    $"{card.Name,-35} {shortString,-40} {card.Rarity,-10} {card.ManaCost,-12} {card.Cmc,-5} {card.Price,-10} {card.IsFoil, -10} {card.Quantity, -15}");
             }
+                
 
             Console.ReadLine();
         }
