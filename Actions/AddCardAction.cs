@@ -1,16 +1,15 @@
-﻿public sealed class AddCardAction : IMenuAction
+﻿public sealed class AddCardAction : MenuAction
 {
     private readonly IScryfallClient _scryfallClient;
     private readonly ICollectionRepository _collectionRepository;
-    public string Label { get; set; } = "Add Card";
 
-    public AddCardAction(IScryfallClient scryfallClient, ICollectionRepository collectionRepository)
+    public AddCardAction(IScryfallClient scryfallClient, ICollectionRepository collectionRepository) :base("Add Card")
     {
         _scryfallClient = scryfallClient ?? throw new ArgumentNullException(nameof(scryfallClient));
         _collectionRepository = collectionRepository ?? throw new ArgumentNullException(nameof(collectionRepository));
     }
 
-    public async Task<bool> ExecuteAsync()
+    public override async Task<bool> ExecuteAsync(Menu menu)
     {
         Console.Clear();
 
@@ -51,12 +50,22 @@
 
             var cardRecord = new CardRecord(card, isFoil, isPromo);
 
-            Console.WriteLine("Hello");
+            if (cardRecord.Price >= 20.0f)
+            {
+                Console.WriteLine($"Adding high-value card: {cardRecord.Name} ({cardRecord.SetCode} #{cardRecord.CollectorNumber}) - ${cardRecord.Price}");
+            }
+            else
+            {
+                Console.WriteLine($"Adding card: {cardRecord.Name} ({cardRecord.SetCode} #{cardRecord.CollectorNumber}) - ${cardRecord.Price}");
+            }
 
             await _collectionRepository.AddAsync(cardRecord);
         }
 
-        string end = Console.ReadLine()!.Trim().ToLower();
+        string end = Console.ReadLine()!;
+
+        menu.RefreshAll();
+
         return true;
     }
 

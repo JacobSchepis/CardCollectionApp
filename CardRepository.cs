@@ -23,6 +23,11 @@ public class CardRecord
 
     public int Quantity { get; set; } = 1;
 
+    public (string setcode, int collectorNumber, bool isFoil) GetUniqueKey()
+    {
+        return (SetCode, CollectorNumber, IsFoil);
+    }
+
     public CardRecord() { }
 
     public CardRecord(ScryfallCard card, bool isFoil, bool isPromo)
@@ -106,12 +111,14 @@ public class CardRepository : ICollectionRepository
         return Task.CompletedTask;
     }
 
-    public List<CardRecord> GetScryfallCards(string query, int pageSize = 175)
+    public List<CardRecord> GetScryfallCards(string query, int pageSize = 175, int offset = 0)
     {
         using var connection = new SqliteConnection(_connectionString);
         connection.Open();
 
-        string sql = $"SELECT * FROM cards {query}";
+        string sql = $"SELECT * FROM cards {query} " +
+            $"ORDER BY price DESC " +
+            $"LIMIT {pageSize} OFFSET {offset * pageSize}";
 
         using var command = new SqliteCommand(sql, connection);
         using var reader = command.ExecuteReader();
@@ -143,7 +150,48 @@ public class CardRepository : ICollectionRepository
 
         return cards;
     }
+
+    public void DecrementQuantityOrDeleteAsync(string setCode, int collectorNumber, bool isFoil, int quantity = 1)
+    {
+        using var conn = new SqliteConnection(_connectionString);
+        conn.Open();
+        using var tx = conn.BeginTransaction();
+
+        // Try decrement
+        var dec = conn.CreateCommand();
+        var _ = dec.Transaction = (SqliteTransaction)tx;
+        dec.CommandText = @"
+        UPDATE cards
+        SET quantity = quantity - $quantity
+        WHERE set_code = $set AND collector_number = $num AND is_foil = $foil
+          AND quantity > $quantity;";
+        dec.Parameters.AddWithValue("$set", setCode);
+        dec.Parameters.AddWithValue("$num", collectorNumber);
+        dec.Parameters.AddWithValue("$foil", isFoil ? 1 : 0);
+        dec.Parameters.AddWithValue("$quantity", quantity);
+        int updated = dec.ExecuteNonQuery();
+
+        if (updated == 0)
+        {
+            // If it was 1, remove the row
+            var del = conn.CreateCommand();
+            del.Transaction = (SqliteTransaction)tx;
+            del.CommandText = @"
+            DELETE FROM cards
+            WHERE set_code = $set AND collector_number = $num AND is_foil = $foil;";
+            del.Parameters.AddWithValue("$set", setCode);
+            del.Parameters.AddWithValue("$num", collectorNumber);
+            del.Parameters.AddWithValue("$foil", isFoil ? 1 : 0);
+            del.ExecuteNonQuery();
+        }
+
+        tx.Commit();
+    }
+
+
 }
+
+
 
 public class SqlWhereBuilder
 {

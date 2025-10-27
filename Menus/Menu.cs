@@ -1,59 +1,113 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Emit;
 using System.Text;
 using System.Threading.Tasks;
 
 public class Menu
 {
-    private string _title = "Main Menu";
+    public string _title { get; private set; }
 
-    private int _cursor = 0;
+    public int _cursor { get; private set; } = 0;
 
-    private readonly List<IMenuAction> _actions;
+    public int _lastCursor { get; private set; } = -1;
 
-    public Menu(string title, List<IMenuAction> options)
+    public Stack<List<MenuAction>> _actionStack { get; private set; } = new();
+
+    private Dictionary<ConsoleKey, MenuAction> _keyMap;
+
+    private bool _running;
+    private readonly IMenuRenderer _renderer;
+
+    public Menu(
+        string title,
+        List<MenuAction> options,
+        IMenuRenderer? renderer = null,
+        Dictionary<ConsoleKey, MenuAction>? keyMap = null
+        )
     {
         _title = title;
-        _actions = options;
+        _actionStack.Push(options);
+        _renderer = renderer ?? new ConsoleMenuRenderer(new ConsoleMenuRendererOptions());
+        _keyMap = keyMap ?? new()
+        {
+            {ConsoleKey.UpArrow, new Menu_MoveUp() },
+            {ConsoleKey.DownArrow, new Menu_MoveDown() },
+            {ConsoleKey.Enter, new Menu_Select() },
+        };
     }
 
-    private void Show()
+    
+
+    private void Render()
     {
-        Console.Clear();
-        Console.WriteLine(_title);
-        foreach(var option in _actions)
-        {
-            if (_actions.IndexOf(option) == _cursor)
-                Console.WriteLine($"> {option.Label}");
-            else
-                Console.WriteLine($"  {option.Label}");
-        }
+        var view = new MenuView(_title, _actionStack.Peek());
+        if (_lastCursor == -1) _renderer.Initialize(view, _cursor);
+        else if (_cursor != _lastCursor) _renderer.RenderSelectionChange(view, _lastCursor, _cursor);
+        _lastCursor = _cursor;
     }
 
     public async Task DisplayMenu()
     {
-        bool keepRunning = true;
+        _running = true;
 
-        while (keepRunning)
+        while (_running)
         {
-            Show();
+            Render();
             var key = Console.ReadKey(true).Key;
 
-            switch (key)
+            if (_keyMap.TryGetValue(key, out var handler))
             {
-                case ConsoleKey.UpArrow:
-                    if (_cursor > 0)
-                        _cursor--;
-                    break;
-                case ConsoleKey.DownArrow:
-                    if (_cursor < _actions.Count - 1)
-                        _cursor++;
-                    break;
-                case ConsoleKey.Enter:
-                    keepRunning = await _actions[_cursor].ExecuteAsync();
-                    break;
+                var running = await handler.ExecuteAsync(this);
+                if (!running)
+                    _running = false;
             }
         }
+    }
+
+    //setters
+
+    public void SetTitle(string title) => _title = title;
+    public void PushActions(List<MenuAction> actions)
+    {
+        _actionStack.Push(actions);
+        RefreshAll();
+    }
+    public void AddActionMapping(ConsoleKey key, MenuAction action)
+    {   
+            _keyMap[key] = action;
+    }
+    public void RemoveActionMapping(ConsoleKey key)
+    {
+        if (_keyMap.ContainsKey(key))
+            _keyMap.Remove(key);
+    }
+    public void MoveCursorUp()
+    {
+        if (_cursor > 0)
+            _cursor--;
+        else
+            _cursor = _actionStack.Peek().Count - 1;
+    }
+    public void MoveCursorDown()
+    {
+        if (_cursor < _actionStack.Peek().Count - 1)
+            _cursor++;
+        else
+            _cursor = 0;
+    }
+
+    public void RefreshAll()
+    {
+        var view = new MenuView(_title, _actionStack.Peek());
+        _renderer.Rebuild(view, _cursor);
+        _lastCursor = _cursor;
+    }
+    public void PopActions()
+    {
+        if (_actionStack.Count > 1)
+            _actionStack.Pop();
+        RefreshAll();
     }
 }

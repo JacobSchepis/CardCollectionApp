@@ -1,8 +1,8 @@
-﻿public sealed class ExitAction : IMenuAction
+﻿public sealed class ExitAction : MenuAction
 {
-    public string Label { get; set; } = "Exit";
+    public ExitAction() : base("Exit") {}
 
-    public Task<bool> ExecuteAsync()
+    public override Task<bool> ExecuteAsync(Menu menu)
     {
         return Task.FromResult(false);
     }
