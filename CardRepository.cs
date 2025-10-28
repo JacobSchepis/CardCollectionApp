@@ -181,11 +181,13 @@ public class CardRepository : ICollectionRepository
             WHERE set_code = $set AND collector_number = $num AND is_foil = $foil;";
             del.Parameters.AddWithValue("$set", setCode);
             del.Parameters.AddWithValue("$num", collectorNumber);
-            del.Parameters.AddWithValue("$foil", isFoil ? 1 : 0);
+            del.Parameters.AddWithValue("$foil", isFoil);
             del.ExecuteNonQuery();
         }
 
         tx.Commit();
+
+        Console.WriteLine($"Decremented or deleted card {setCode} #{collectorNumber} (Foil: {isFoil}) by {quantity}.");
     }
 
 
