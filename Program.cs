@@ -19,7 +19,7 @@ class Program
         {
             new AddCardAction(new ScryfallClient(), repo),
             new ViewCardsAction(repo),
-            new ExitAction()
+            new ExitApplicationAction()
         });
         await menu.DisplayMenu();
         

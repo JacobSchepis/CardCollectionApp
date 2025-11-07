@@ -1,6 +1,6 @@
-﻿public class Menu_MoveBack : MenuAction
+﻿public class Utility_MoveBack : MenuAction
 {
-    public Menu_MoveBack() : base("Exit") { }
+    public Utility_MoveBack() : base("Exit") { }
     public override Task<bool> ExecuteAsync(Menu menu)
     {
         menu.PopActions();

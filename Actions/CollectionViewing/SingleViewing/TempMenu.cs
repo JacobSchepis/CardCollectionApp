@@ -15,9 +15,9 @@
     {
         List<MenuAction> actions = new()
         {
-            new TextDisplayAction("This is a test action"),
+            new Utility_TextDisplayAction("This is a test action"),
             new RemoveCardAction(_collectionRepository, _id, _display),
-            new TextDisplayAction(),
+            new Utility_TextDisplayAction(),
             new ExitViewSingleAction(_config, _display)
         };
 

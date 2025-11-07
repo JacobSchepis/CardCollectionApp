@@ -85,8 +85,8 @@ public class DisplayCardsAction : MenuAction
             actionList.Add(new TempMenu(line, _config, this, (card.GetUniqueKey()), _collectionRepository));
         }
 
-        actionList.Add(new TextDisplayAction());
-        actionList.Add(new Menu_MoveBack());
+        actionList.Add(new Utility_TextDisplayAction());
+        actionList.Add(new Utility_MoveBack());
 
         menu.PushActions(actionList);
         menu.AddActionMapping(ConsoleKey.RightArrow, new NextPageAction(_config, this));

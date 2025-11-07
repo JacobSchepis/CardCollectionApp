@@ -1,6 +1,6 @@
-﻿public sealed class ExitAction : MenuAction
+﻿public sealed class ExitApplicationAction : MenuAction
 {
-    public ExitAction() : base("Exit") {}
+    public ExitApplicationAction() : base("Exit") {}
 
     public override Task<bool> ExecuteAsync(Menu menu)
     {

@@ -1,7 +1,6 @@
-﻿
-public class Menu_MoveUp : MenuAction
+﻿public class Utility_MoveUp : MenuAction
 {
-    public Menu_MoveUp() : base("Move Up") { }
+    public Utility_MoveUp() : base("Move Up") { }
     public override Task<bool> ExecuteAsync(Menu menu)
     {
         menu.MoveCursorUp();

@@ -32,9 +32,9 @@ public class Menu
         _renderer = renderer ?? new ConsoleMenuRenderer(new ConsoleMenuRendererOptions());
         _keyMap = keyMap ?? new()
         {
-            {ConsoleKey.UpArrow, new Menu_MoveUp() },
+            {ConsoleKey.UpArrow, new Utility_MoveUp() },
             {ConsoleKey.DownArrow, new Menu_MoveDown() },
-            {ConsoleKey.Enter, new Menu_Select() },
+            {ConsoleKey.Enter, new Utility_Select() },
         };
     }
 

@@ -1,0 +1,6 @@
+1. Search all cards
+2. When adding cards have an edit function so you can edit changes
+3. Sell list
+4. Be able to search scryfall by set for certain cards
+	4.1 Displays all the cards and tells you if you own it or not
+5. 

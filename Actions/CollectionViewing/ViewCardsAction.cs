@@ -37,4 +37,6 @@ public class ViewCardsConfig
     public int currentPage = 0;
     public int pageSize = 30;
 
+
 }
+
